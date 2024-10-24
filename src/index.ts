@@ -17,7 +17,7 @@ app.use("/api/level", levelRoutes);
 app.use("/api/leadeboard", leaderBoardRoutes);
 
 // Connect to database and start server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 connectDB().then(() => {
   app.listen(PORT, () => {
