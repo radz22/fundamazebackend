@@ -20,30 +20,24 @@ export const GetUserLevel = async (req: Request, res: Response) => {
 export const CreateLevel = async (req: Request, res: Response) => {
   try {
     const { userid, level } = req.body;
-
     if (!userid || !level) {
       res.status(400).json({ msg: "userid and level are required" });
       return;
     }
-    const verifiytoken = VerifyToken(userid);
-    const findUserLevel = await levelModel.findOne({
-      userid: verifiytoken.id,
-      level: level,
-    });
-
-    if (findUserLevel) {
+    if (level == 1) {
       res.status(200).json({ level: level });
       return;
     }
 
-    const createUserLevel = await levelModel.create({
+    const verifiytoken = VerifyToken(userid);
+    const checkPreviousLevel = await levelModel.findOne({
       userid: verifiytoken.id,
-      level: level,
-      star: 0,
+      level: level - 1,
     });
-
-    if (!createUserLevel) {
-      res.status(400).json({ msg: "not created" });
+    if (!checkPreviousLevel) {
+      res.status(400).json({
+        msg: `Finish previos level before proceed to another level`,
+      });
       return;
     }
 
@@ -52,7 +46,6 @@ export const CreateLevel = async (req: Request, res: Response) => {
     res.status(500).send({ msg: "Internal server error", error: error });
   }
 };
-
 export const GetLevel = async (req: Request, res: Response) => {
   try {
     const { userid, level } = req.body;

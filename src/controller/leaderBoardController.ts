@@ -13,11 +13,11 @@ export const CreatePoint = async (req: Request, res: Response) => {
     });
 
     if (!findUserAddPoint) {
-      const updateCheckStar = await levelModel.findOneAndUpdate(
-        { userid: verifiytoken.id, level: level },
-        { star: points },
-        { new: true }
-      );
+      const createUserLevel = await levelModel.create({
+        userid: verifiytoken.id,
+        level: level,
+        star: points,
+      });
       const createUserInLeaderBoard = await leaderBoardModel.create({
         userid: verifiytoken.id,
         username: username,
@@ -25,7 +25,7 @@ export const CreatePoint = async (req: Request, res: Response) => {
       });
       res
         .status(200)
-        .json({ msg: createUserInLeaderBoard, sucess: updateCheckStar });
+        .json({ msg: createUserInLeaderBoard, sucess: createUserLevel });
       return;
     }
 
@@ -33,6 +33,25 @@ export const CreatePoint = async (req: Request, res: Response) => {
       userid: verifiytoken.id,
       level: level,
     });
+
+    if (!findUserLevel) {
+      const incrementPointsFromUser = await leaderBoardModel.findOneAndUpdate(
+        { userid: verifiytoken.id },
+        { $inc: { points: points } },
+        { new: true }
+      );
+
+      const createUserLevel = await levelModel.create({
+        userid: verifiytoken.id,
+        level: level,
+        star: points,
+      });
+      res.status(200).send({
+        create: createUserLevel,
+        incrementpoint: incrementPointsFromUser,
+      });
+      return;
+    }
 
     const checkStar = findUserLevel?.star;
 
@@ -43,6 +62,12 @@ export const CreatePoint = async (req: Request, res: Response) => {
       return;
     }
 
+    if (checkStar == points) {
+      res.status(200).send({
+        msg: "no need to update",
+      });
+      return;
+    }
     const updateCheckStar = await levelModel.findOneAndUpdate(
       { userid: verifiytoken.id, level: level },
       { star: points },
